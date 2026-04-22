@@ -13,7 +13,7 @@ int	is_single_hyphen_known_flag(char *str) {
 	int		i = 0;
 
 	while (i < 3) {
-		if (str == known_flags[i])
+		if (*str == known_flags[i])
 			return i;
 		i++;
 	}
@@ -26,7 +26,7 @@ int	is_double_hyphen_known_flag(char *str) {
 
 	while (i < 5) {
 		if (strcmp(str, known_flags[i]) == 0)
-			return ;
+			return i;
 		i++;
 	}
 	return -1;
@@ -34,7 +34,6 @@ int	is_double_hyphen_known_flag(char *str) {
 
 int	verify_and_get_flag(char *flag) {
 	int	hyphen_count = bypass_hyphen(flag);
-	int	result = 0;
 
 	if (hyphen_count > 2)
 		return -1;
@@ -78,11 +77,11 @@ int	update_indexes(int **flag_indexes, int current_length, int new_index) {
 	free(*flag_indexes);
 	flag_indexes = malloc(sizeof(int) * new_length);
 	i = 0;
-	while (i < old_indexes) {
-		flag_indexes[i] = old_indexes[i];
+	while (i < current_length) {
+		*flag_indexes[i] = old_indexes[i];
 		i++;
 	}
-	flag_indexes[++i] = new_index;
+	*flag_indexes[++i] = new_index;
 	return new_length;
 }
 
@@ -97,13 +96,14 @@ command_options	*flags_specified(char **args) {
 
 	while (args[i] != NULL) {
 		if (strchr(args[i], '-')) {
-			flag_type = verify_flag(args[i]);
+			flag_type = verify_and_get_flag(args[i]);
 			fill_options(flag_type, &cmd_options);
-			flag_find_indexes = update_indexes(&flag_find_indexes, flag_find_indexes, i);
+			flag_indexes_length = update_indexes(&flag_find_indexes, flag_indexes_length, i);
 		}
+		i++;
 	}
 	cmd_options->flag_indexes = flag_find_indexes;
-	cmd_options->indexes_length = flag_find_indexes;
+	cmd_options->indexes_length = flag_indexes_length;
 	return cmd_options;
 }
 
@@ -112,9 +112,9 @@ void	get_address(char **argv, command_options **command_options) {
 	int		i = 0;
 
 	while (argv[i] != NULL) {
-		char	**new_tab_address = copy_tab_plus_one((*command_options)->address);
+		char	**new_tab_address = new_tab_plus_one((*command_options)->address);
 		int		current_length = length_char_tab(new_tab_address);
-		new_tab_address[current_length + 1] = strdup(argv[i]);
+		new_tab_address[current_length - 1] = strdup(argv[i]);
 		free((*command_options)->address);
 		(*command_options)->address = new_tab_address;
 		i++;
