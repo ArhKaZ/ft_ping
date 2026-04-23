@@ -9,6 +9,10 @@ int treat_info_flags(command_options *cmd_options) {
         printf("%s", VERSION_DISPLAY);
         return 1;
     }
+    if (cmd_options->is_usage) {
+        printf("%s", USAGE_DISPLAY);
+        return 1;
+    }
     return 0;
 }
 

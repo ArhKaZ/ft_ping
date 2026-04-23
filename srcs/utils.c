@@ -66,3 +66,47 @@ char    **new_tab_plus_one(char **tab) {
     }
     return new_tab;
 }
+
+struct option* create_option(int i) {
+    struct option *new_option = malloc(sizeof(struct option));
+    switch (i) {
+        case 0:
+            new_option->name = "verbose";
+            new_option->has_arg = 0;
+            new_option->val = 0;
+            new_option->flag = NULL;
+            break;
+        case 1:
+            new_option->name = "help";
+            new_option->has_arg = 0;
+            new_option->val = 1;
+            new_option->flag = NULL;
+            break;
+        case 2:
+            new_option->name = "usage";
+            new_option->has_arg = 0;
+            new_option->val = 2;
+            new_option->flag = NULL;
+            break;
+        case 3:
+            new_option->name = "version";
+            new_option->has_arg = 0;
+            new_option->val = 3;
+            new_option->flag = NULL;
+            break;
+        default:
+            break;
+    }
+    return new_option;
+}
+
+struct option* get_flags_options() {
+    struct option *options;
+    int i = 0;
+    options = malloc(sizeof(struct option) * NB_LONG_FLAG_ACTIVES);
+    while (i < NB_LONG_FLAG_ACTIVES) {
+        options[i] = *create_option(i);
+        i++;
+    }
+    return options;
+}

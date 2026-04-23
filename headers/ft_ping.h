@@ -9,38 +9,15 @@
 # define ERROR_WRONG_ARG_TEXT "ft_ping: invalid option\nTry 'ft_ping --help' or 'ft_ping --usage' for more information.\n"
 # define ERROR_ADDRESS_NO_VALUE_TEXT ""
 
-# define VERSION_DISPLAY "ft_ping (based on GNU inetutils) 2.4 \
-Copyright (C) 2022 Free Software Foundation, Inc. \
-License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>. \
-This is free software: you are free to change and redistribute it. \
-There is NO WARRANTY, to the extent permitted by law. \
-Based on code written by Sergey Poznyakoff."
+# define VERSION_DISPLAY "ft_ping (based on GNU inetutils) 2.4 \n Copyright (C) 2022 Free Software Foundation, Inc. \n License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>. \n This is free software: you are free to change and redistribute it. \n There is NO WARRANTY, to the extent permitted by law. \n Based on code written by Sergey Poznyakoff.\n"
 
-# define HELP_DISPLAY "Usage: ft_ping [OPTION...] HOST ... \
-Send ICMP ECHO_REQUEST packets to network hosts. \
-\
-Options controlling ICMP request types: \
-      --address              send ICMP_ADDRESS packets (root only) \
-      --echo                 send ICMP_ECHO packets (default) \
-      --mask                 same as --address \
-\
- Options valid for all request types: \
-\
-  -v, --verbose              verbose output \
-\
- Options valid for --echo requests: \
-  -?, --help                 give this help list \
-      --usage                give a short usage message \
-  -V, --version              print program version \
-\
-Mandatory or optional arguments to long options are also mandatory or optional \
-for any corresponding short options. \
-\
-Options marked with (root only) are available only to superuser. \
-\
-Report bugs to syluiset."
+# define HELP_DISPLAY "Usage: ft_ping [OPTION...] HOST ... \n Send ICMP ECHO_REQUEST packets to network hosts. \n\n Options controlling ICMP request types: \n      --address              send ICMP_ADDRESS packets (root only) \n      --echo                 send ICMP_ECHO packets (default) \n      --mask                 same as --address \n\n Options valid for all request types: \n\n  -v, --verbose              verbose output \n\n Options valid for --echo requests: \n  -?, --help                 give this help list \n      --usage                give a short usage message \n  -V, --version              print program version \n\nMandatory or optional arguments to long options are also mandatory or optional \nfor any corresponding short options. \n\nOptions marked with (root only) are available only to superuser. \n\nReport bugs to syluiset.\n"
+
+# define USAGE_DISPLAY "Usage: ping [-v?V]\n            [--address] [--echo]\n            [--verbose]\n            [--quiet] [--help] [--usage] [--version]\n            HOST ...\n"
 
 # define ICMP_PAYLOAD_LENGTH (64 - sizeof(icmp))
+
+# define NB_LONG_FLAG_ACTIVES 4
 
 # include <stdio.h>
 # include <string.h>
@@ -56,6 +33,7 @@ Report bugs to syluiset."
 # include <signal.h>
 # include <stdbool.h>
 # include <time.h>
+# include <getopt.h>
 
 extern volatile sig_atomic_t is_cancelled;
 
@@ -64,6 +42,7 @@ typedef struct  s_command_options
     int 	is_version;
     int 	is_verbose;
     int 	is_help;
+    int     is_usage;
     int 	in_parsing_error;
 	int		*flag_indexes;
 	int		indexes_length;
@@ -123,5 +102,7 @@ char    **clean_args(char **argv, command_options *cmd_options);
 void	get_address(char **argv, command_options **command_options);
 
 void    set_signal_action(void);
+
+struct option* get_flags_options();
 
 #endif

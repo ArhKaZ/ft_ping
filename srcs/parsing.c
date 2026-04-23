@@ -9,7 +9,7 @@ int	bypass_hyphen(char *str) {
 }
 
 int	is_single_hyphen_known_flag(char *str) {
-	char	known_flags[] = {'v', '?', 'v'};
+	char	known_flags[] = {'V', '?', 'v'};
 	int		i = 0;
 
 	while (i < 3) {
@@ -21,10 +21,10 @@ int	is_single_hyphen_known_flag(char *str) {
 }
 
 int	is_double_hyphen_known_flag(char *str) {
-	char	*known_flags[] = {"version", "help", "verbose", "address", "mask"};
+	char	*known_flags[] = {"version", "help", "verbose", "usage", "address", "mask", };
 	int		i = 0;
 
-	while (i < 5) {
+	while (i < 6) {
 		if (strcmp(str, known_flags[i]) == 0)
 			return i;
 		i++;
@@ -39,9 +39,7 @@ int	verify_and_get_flag(char *flag) {
 		return -1;
 	if (hyphen_count == 1)
 		return is_single_hyphen_known_flag(flag + 1);
-	else
-		return is_double_hyphen_known_flag(flag + 2);
-
+	return is_double_hyphen_known_flag(flag + 2);
 }
 
 void	fill_options(int flag_type, command_options **cmd_options) {
@@ -59,13 +57,15 @@ void	fill_options(int flag_type, command_options **cmd_options) {
 		case 2:
 			(*cmd_options)->is_verbose = 1;
 			break;
+		case 3:
+			(*cmd_options)->is_usage = 1;
+			break;
 		default:
 			break;
 	}
 }
 
 int	update_indexes(int **flag_indexes, int current_length, int new_index) {
-	int	new_length = current_length + 1;
 	int	*old_indexes = malloc(sizeof(int) * current_length);
 	int i = 0;
 
@@ -75,30 +75,35 @@ int	update_indexes(int **flag_indexes, int current_length, int new_index) {
 	}
 
 	free(*flag_indexes);
-	flag_indexes = malloc(sizeof(int) * new_length);
+	*flag_indexes = malloc(sizeof(int *) * (current_length + 1));
 	i = 0;
 	while (i < current_length) {
 		*flag_indexes[i] = old_indexes[i];
 		i++;
 	}
-	*flag_indexes[++i] = new_index;
-	return new_length;
+	*flag_indexes[i] = new_index;
+	free(old_indexes);
+	return current_length + 1;
 }
 
 command_options	*flags_specified(char **args) {
-	int i = 0;
+	int i = 1;
 	int	flag_type = 0;
-	int	*flag_find_indexes = NULL;
+	int	*flag_find_indexes;
 	int	flag_indexes_length = 0;
 	command_options *cmd_options;
-
+	bool	as_found_one_flag = false;
+	memset(&flag_find_indexes, 0, sizeof(int));
 	cmd_options = initialize_command_options();
 
 	while (args[i] != NULL) {
 		if (strchr(args[i], '-')) {
 			flag_type = verify_and_get_flag(args[i]);
-			fill_options(flag_type, &cmd_options);
+			if (as_found_one_flag == false) {
+				fill_options(flag_type, &cmd_options);
+			}
 			flag_indexes_length = update_indexes(&flag_find_indexes, flag_indexes_length, i);
+			as_found_one_flag = true;
 		}
 		i++;
 	}
