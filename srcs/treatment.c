@@ -12,8 +12,6 @@ int treat_info_flags(command_options *cmd_options) {
     return 0;
 }
 
-//Demande a resoudre l'hostname (www.google.com) pour avoir l'ip a la quel il faut parler
-//L'assigne le type et l'addresse de l'ip a la quel on va parler
 int get_info_from_hostname(char *address, struct sockaddr_in *sock_addr) {
     char buffer[1024];
     struct addrinfo hints;
@@ -39,7 +37,7 @@ int get_info_from_hostname(char *address, struct sockaddr_in *sock_addr) {
         freeaddrinfo(result);
         return 0;
     }
-    printf("ERROR no address IPV4\n");
+    printf("ERROR: no address IPV4\n");
     freeaddrinfo(result);
     
     return -1;
@@ -103,20 +101,20 @@ void    initialize_icmp_packet(ping_pkt *packet, int sequence, pid_t pid) {
 
 info_package_sended send_package(int fd, ping_pkt* packet, struct sockaddr_in* addr, int pid) {
     int done = 0;
-    int data_received_length = 0;
+    ssize_t data_received_length = 0;
     char    buffer[1024];
     int ip_header_length = 20;
     int min_icmp_response_size = ip_header_length + 8;
-    ping_pkt *data_received;
     ssize_t send_to_length = 0;
     socklen_t from_len = sizeof(*addr);
     info_package_sended info_to_return;
 
+    memset(&info_to_return, 0, sizeof(info_package_sended));
     clock_gettime(CLOCK_MONOTONIC, &info_to_return.starttime);
 
     send_to_length = sendto(fd, packet, sizeof(*packet), 0, (struct sockaddr* )addr, sizeof(*addr));
     if (send_to_length < 0) {
-        printf("ERROR sendto");
+        printf("ERROR: sendto %s as failed: %s\n ", inet_ntoa(addr->sin_addr), strerror(errno));
         return info_to_return;
     }
     while (!done) {
@@ -125,21 +123,20 @@ info_package_sended send_package(int fd, ping_pkt* packet, struct sockaddr_in* a
         clock_gettime(CLOCK_MONOTONIC, &info_to_return.endtime);
         if (data_received_length < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                printf("TIMEOUT\n");
+                printf("ERROR: timeout\n");
                 return info_to_return;
             }
-            printf("RECVFROM ERROR");
+            printf("ERROR: recvfrom %s as failed : %s\n", inet_ntoa(addr->sin_addr), strerror(errno));
             return info_to_return;
         }
         if (data_received_length < min_icmp_response_size) {
             continue;
         }
-        data_received = (ping_pkt*)&buffer[ip_header_length];
+        ping_pkt *data_received = (ping_pkt *) &buffer[ip_header_length];
         if (verify_reply(data_received, pid)) {
-            printf("GOT A PACKET\n");
+            const unsigned char *ip_header = (unsigned char *)buffer;
+            info_to_return.ttl = ip_header[8];
             done = 1;
-        } else {
-            printf("GOT SOMETHING ELSE\n");
         }
     }
     return info_to_return;
@@ -158,12 +155,17 @@ int verify_reply(ping_pkt *received, int expected_id) {
     return 1;
 }
 
-void    display_info_package(ping_pkt *packet, info_package_sended *infos_returned) {
-    (void)packet;
+void    display_info_package(ping_pkt *packet, info_package_sended *infos_returned, struct sockaddr_in *dest_addr) {
     if (infos_returned == NULL) {
         return;
     }
-    
+    double time_diff =  (infos_returned->endtime.tv_sec - infos_returned->starttime.tv_sec)
+      + (infos_returned->endtime.tv_nsec - infos_returned->starttime.tv_nsec) / 1000000.0;
+
+    printf("%li bytes from %s: icmp_seq=%d ttl=%d time=%0.3f ms\n",
+        sizeof(*packet), inet_ntoa(dest_addr->sin_addr),
+        ntohs(packet->hdr.echo.sequence), infos_returned->ttl, time_diff
+        );
 }
 
 int launch_send_to(int sequence, struct sockaddr_in *dest_addr) {
@@ -190,7 +192,7 @@ int launch_send_to(int sequence, struct sockaddr_in *dest_addr) {
     pid_t pid = getpid();
     initialize_icmp_packet(&packet, sequence, pid);
     infos_returned = send_package(fd, &packet, dest_addr, pid);
-    display_info_package(&packet, &infos_returned);
+    display_info_package(&packet, &infos_returned, dest_addr);
     return 0;
 }
 
@@ -205,11 +207,11 @@ void    launch_all_loops(char **addresses) {
         if (get_info_from_hostname(addresses[i], &dest_addr) < 0) {
             return ;
         }
-        printf("PING %s (%s)\n", addresses[i], "0.0.0.0");
+        printf("PING %s (%s): %ld data bytes\n", addresses[i], inet_ntoa(dest_addr.sin_addr), ICMP_PAYLOAD_LENGTH);
         while (!is_cancelled) {
             launch_send_to(j, &dest_addr);
             j++;
-            sleep(1000);
+            sleep(1);
         }
         i++;
     }

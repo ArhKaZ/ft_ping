@@ -99,6 +99,7 @@ typedef struct s_ping_pkt
 typedef struct s_info_package_sended {
     struct timespec starttime;
     struct timespec endtime;
+    int             ttl;
 }               info_package_sended;
 
 void display_errors(int error_type);
