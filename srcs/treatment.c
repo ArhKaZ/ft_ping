@@ -83,13 +83,13 @@ u_int16_t calculate_checksum(const ping_pkt* packet) {
     return (u_int16_t)~sum;
 }
 
-void    initialize_icmp_packet(ping_pkt *packet, int sequence) {
+void    initialize_icmp_packet(ping_pkt *packet, int sequence, pid_t pid) {
     long unsigned int i = 0;
 
     memset(packet, 0, sizeof(*packet));
     packet->hdr.type = 8;
     packet->hdr.code = 0;
-    packet->hdr.echo.id = htons(getpid());
+    packet->hdr.echo.id = htons(pid);
     packet->hdr.echo.sequence = htons(sequence);
 
     while (i < ICMP_PAYLOAD_LENGTH) {
@@ -117,7 +117,7 @@ info_package_sended send_package(int fd, ping_pkt* packet, struct sockaddr_in* a
     send_to_length = sendto(fd, packet, sizeof(*packet), 0, (struct sockaddr* )addr, sizeof(*addr));
     if (send_to_length < 0) {
         printf("ERROR sendto");
-        return -1;
+        return info_to_return;
     }
     while (!done) {
         from_len = sizeof(*addr);
@@ -158,19 +158,22 @@ int verify_reply(ping_pkt *received, int expected_id) {
     return 1;
 }
 
-int launch_send_to(char *address, int sequence) {
-    struct sockaddr_in dest_addr;
+void    display_info_package(ping_pkt *packet, info_package_sended *infos_returned) {
+    (void)packet;
+    if (infos_returned == NULL) {
+        return;
+    }
+    
+}
+
+int launch_send_to(int sequence, struct sockaddr_in *dest_addr) {
+    
     int fd = 0;
-    socklen_t dest_len;
-    char    *data;
     ping_pkt    packet;
     info_package_sended infos_returned;
 
-    memset(&dest_addr, 0, sizeof(dest_addr));
-
-    if (get_info_from_hostname(address, &dest_addr) < 0) {
-        return -1;
-    }
+    memset(&infos_returned, 0, sizeof(infos_returned));
+    
     fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (fd < 0) {
         printf("%s : %s", "ERROR while creating socket\n", strerror(errno));
@@ -184,25 +187,29 @@ int launch_send_to(char *address, int sequence) {
         printf("%s", "ERROR with set receive timeout\n");
         return -1;
     }
-    uint16_t pid = getpid();
-    (void)data;
-    (void)dest_len;
-
-    initialize_icmp_packet(&packet, sequence);
-    infos_returned = send_package(fd, &packet, &dest_addr, pid);
+    pid_t pid = getpid();
+    initialize_icmp_packet(&packet, sequence, pid);
+    infos_returned = send_package(fd, &packet, dest_addr, pid);
+    display_info_package(&packet, &infos_returned);
     return 0;
 }
 
 void    launch_all_loops(char **addresses) {
     int i = 0;
-
+    struct sockaddr_in dest_addr;
     set_signal_action();
     while (addresses[i] != NULL) {
         is_cancelled = 0;
         int j = 0;
+        memset(&dest_addr, 0, sizeof(dest_addr));
+        if (get_info_from_hostname(addresses[i], &dest_addr) < 0) {
+            return ;
+        }
+        printf("PING %s (%s)\n", addresses[i], "0.0.0.0");
         while (!is_cancelled) {
-            launch_send_to(addresses[i], j);
+            launch_send_to(j, &dest_addr);
             j++;
+            sleep(1000);
         }
         i++;
     }
