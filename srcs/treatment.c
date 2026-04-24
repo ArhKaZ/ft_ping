@@ -1,17 +1,23 @@
 #include "ft_ping.h"
 
-int treat_info_flags(command_options *cmd_options) {
-    if (cmd_options->is_help) {
-        printf("%s", HELP_DISPLAY);
-        return 1;
-    }
-    if (cmd_options->is_version) {
-        printf("%s", VERSION_DISPLAY);
-        return 1;
-    }
-    if (cmd_options->is_usage) {
-        printf("%s", USAGE_DISPLAY);
-        return 1;
+int treat_info_flags(flag *flags) {
+    for (flag *flag = flags; flag != NULL; flag = flag->next) {
+        if (!flag->is_prio) {
+            continue;
+        }
+        switch (flag->name) {
+            case 'V':
+                printf("%s", VERSION_DISPLAY);
+                return 1;
+            case '?':
+                printf("%s", HELP_DISPLAY);
+                return 1;
+            case 'u':
+                printf("%s", USAGE_DISPLAY);
+                return 1;
+            default:
+                break;
+        }
     }
     return 0;
 }
@@ -200,23 +206,29 @@ int launch_send_to(int sequence, struct sockaddr_in *dest_addr) {
     return 0;
 }
 
-void    launch_all_loops(char **addresses) {
-    int i = 0;
+void    launch_all_loops(addresses *addr) {
     struct sockaddr_in dest_addr;
     set_signal_action();
-    while (addresses[i] != NULL) {
+    int packet_received;
+    while (addr != NULL) {
+        //TODO envoyer un packet mais ne pas l'attendre quand on a cancel
         is_cancelled = 0;
-        int j = 0;
+        packet_received = 0;
+        int i = 0;
         memset(&dest_addr, 0, sizeof(dest_addr));
-        if (get_info_from_hostname(addresses[i], &dest_addr) < 0) {
+        if (get_info_from_hostname(addr->address, &dest_addr) < 0) {
             return ;
         }
-        printf("PING %s (%s): %ld data bytes\n", addresses[i], inet_ntoa(dest_addr.sin_addr), ICMP_PAYLOAD_LENGTH);
+        printf("FT_PING %s (%s): %ld data bytes\n", addr->address, inet_ntoa(dest_addr.sin_addr), ICMP_PAYLOAD_LENGTH);
         while (!is_cancelled) {
-            launch_send_to(j, &dest_addr);
-            j++;
+            if (launch_send_to(i, &dest_addr) == 0) {
+                packet_received += 1;
+            }
+            i++;
             sleep(1);
         }
-        i++;
+        printf("--- %s ft_ping statistics ---\n", addr->address);
+        printf("%d packets transmitted, %d packets received, %d%c packet loss\n", i, packet_received ,0 ,37);
+        addr = addr->next;
     }
 }

@@ -42,86 +42,49 @@ int	verify_and_get_flag(char *flag) {
 	return is_double_hyphen_known_flag(flag + 2);
 }
 
-void	fill_options(int flag_type, command_options **cmd_options) {
-	switch (flag_type)
-	{
-		case -1:
-			(*cmd_options)->in_parsing_error = ERROR_WRONG_ARG;
+bool	get_flags(int argc, char **argv, flag** flags) {
+	const char *options = "v?V";
+	int nb_flags_active = NB_LONG_FLAG_ACTIVES;
+	struct option* get_opt_options = get_flags_options();
+	bool	got_an_error = false;
+	while (1) {
+		char flag_getted = getopt_long(argc, argv, options, get_opt_options, &nb_flags_active);
+		if (flag_getted == -1)
 			break;
-		case 0:
-			(*cmd_options)->is_version = 1;
-			break;
-		case 1:
-			(*cmd_options)->is_help = 1;
-			break;
-		case 2:
-			(*cmd_options)->is_verbose = 1;
-			break;
-		case 3:
-			(*cmd_options)->is_usage = 1;
-			break;
-		default:
-			break;
+		if (flag_getted == '?' && optopt != 0) {
+			got_an_error = true;
+			continue;
+		}
+		if (*flags != NULL) {
+			(*flags)->next = create_flag(flag_getted, false, optind);
+		} else {
+			*flags = create_flag(flag_getted, true, optind);
+		}
 	}
+	free(get_opt_options);
+	return got_an_error;
 }
 
-int	update_indexes(int **flag_indexes, int current_length, int new_index) {
-	int	*old_indexes = malloc(sizeof(int) * current_length);
-	int i = 0;
-
-	while (i < current_length) {
-		old_indexes[i] = *flag_indexes[i];
-		i++;
-	}
-
-	free(*flag_indexes);
-	*flag_indexes = malloc(sizeof(int *) * (current_length + 1));
-	i = 0;
-	while (i < current_length) {
-		*flag_indexes[i] = old_indexes[i];
-		i++;
-	}
-	*flag_indexes[i] = new_index;
-	free(old_indexes);
-	return current_length + 1;
+addresses	*create_addresses(char *address) {
+	addresses	*new_addresses = malloc(sizeof(addresses));
+	new_addresses->address = address;
+	new_addresses->next = NULL;
+	return new_addresses;
 }
 
-command_options	*flags_specified(char **args) {
-	int i = 1;
-	int	flag_type = 0;
-	int	*flag_find_indexes;
-	int	flag_indexes_length = 0;
-	command_options *cmd_options;
-	bool	as_found_one_flag = false;
-	memset(&flag_find_indexes, 0, sizeof(int));
-	cmd_options = initialize_command_options();
+addresses	*get_address(char **argv, flag *flags) {
+	int		i = 1;
+	addresses	*addresses_getted = NULL;
 
-	while (args[i] != NULL) {
-		if (strchr(args[i], '-')) {
-			flag_type = verify_and_get_flag(args[i]);
-			if (as_found_one_flag == false) {
-				fill_options(flag_type, &cmd_options);
+	while (argv[i] != NULL) {
+		if (index_not_a_flag(i, flags)) {
+			if (addresses_getted == NULL) {
+				addresses_getted = create_addresses(argv[i]);
+			} else {
+				addresses_getted->next = create_addresses(argv[i]);
 			}
-			flag_indexes_length = update_indexes(&flag_find_indexes, flag_indexes_length, i);
-			as_found_one_flag = true;
 		}
 		i++;
 	}
-	cmd_options->flag_indexes = flag_find_indexes;
-	cmd_options->indexes_length = flag_indexes_length;
-	return cmd_options;
-}
-
-
-void	get_address(char **argv, command_options **command_options) {
-	int		i = 0;
-
-	while (argv[i] != NULL) {
-		char	**new_tab_address = new_tab_plus_one((*command_options)->address);
-		int		current_length = length_char_tab(new_tab_address);
-		new_tab_address[current_length - 1] = strdup(argv[i]);
-		free((*command_options)->address);
-		(*command_options)->address = new_tab_address;
-		i++;
-	}
+	return addresses_getted;
 }

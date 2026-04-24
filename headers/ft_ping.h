@@ -10,14 +10,16 @@
 # define ERROR_ADDRESS_NO_VALUE_TEXT ""
 
 # define VERSION_DISPLAY "ft_ping (based on GNU inetutils) 2.4 \n Copyright (C) 2022 Free Software Foundation, Inc. \n License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>. \n This is free software: you are free to change and redistribute it. \n There is NO WARRANTY, to the extent permitted by law. \n Based on code written by Sergey Poznyakoff.\n"
-
 # define HELP_DISPLAY "Usage: ft_ping [OPTION...] HOST ... \n Send ICMP ECHO_REQUEST packets to network hosts. \n\n Options controlling ICMP request types: \n      --address              send ICMP_ADDRESS packets (root only) \n      --echo                 send ICMP_ECHO packets (default) \n      --mask                 same as --address \n\n Options valid for all request types: \n\n  -v, --verbose              verbose output \n\n Options valid for --echo requests: \n  -?, --help                 give this help list \n      --usage                give a short usage message \n  -V, --version              print program version \n\nMandatory or optional arguments to long options are also mandatory or optional \nfor any corresponding short options. \n\nOptions marked with (root only) are available only to superuser. \n\nReport bugs to syluiset.\n"
-
 # define USAGE_DISPLAY "Usage: ping [-v?V]\n            [--address] [--echo]\n            [--verbose]\n            [--quiet] [--help] [--usage] [--version]\n            HOST ...\n"
 
 # define ICMP_PAYLOAD_LENGTH (64 - sizeof(icmp))
 
 # define NB_LONG_FLAG_ACTIVES 4
+# define VERBOSE_FLAG_VALUE 0
+# define HELP_FLAG_VALUE 1
+# define USAGE_FLAG_VALUE 2
+# define VERSION_FLAG_VALUE 3
 
 # include <stdio.h>
 # include <string.h>
@@ -37,27 +39,18 @@
 
 extern volatile sig_atomic_t is_cancelled;
 
-typedef struct  s_command_options
-{
-    int 	is_version;
-    int 	is_verbose;
-    int 	is_help;
-    int     is_usage;
-    int 	in_parsing_error;
-	int		*flag_indexes;
-	int		indexes_length;
-    char	**address;
-}				command_options;
+typedef struct s_flag {
+    char	        name;
+    bool	        is_first;
+    bool            is_prio;
+    int             idx;
+    struct s_flag   *next;
+}                       flag;
 
 typedef struct  s_echo {
     u_int16_t   id;
     u_int16_t   sequence;
 }               echo;
-
-typedef struct  s_frag {
-    u_int16_t   __unused;
-    u_int16_t   mtu;
-}               frag;
 
 typedef struct  s_icmp
 {
@@ -65,8 +58,6 @@ typedef struct  s_icmp
     u_int8_t    code;
     u_int16_t   checksum;
     echo        echo;
-    u_int32_t   gateway;
-    frag        frag;
 }                   icmp;
 
 typedef struct s_ping_pkt
@@ -81,28 +72,35 @@ typedef struct s_info_package_sended {
     int             ttl;
 }               info_package_sended;
 
+typedef struct s_addresses {
+    char    *address;
+    struct s_addresses *next;
+}               addresses;
+
 void display_errors(int error_type);
 
-command_options	*flags_specified(char **args);
-
-command_options *initialize_command_options();
-
-char    **new_tab_plus_one(char **tab);
-
-int	length_char_tab(char **tab);
-
-void	launch_all_loops(char **address);
+void    launch_all_loops(addresses *addresses);
 
 int	verify_reply(ping_pkt *received, int expected_id);
 
-int treat_info_flags(command_options *cmd_options);
+int treat_info_flags(flag *flags);
 
-char    **clean_args(char **argv, command_options *cmd_options);
-
-void	get_address(char **argv, command_options **command_options);
+addresses	*get_address(char **argv, flag *flags);
 
 void    set_signal_action(void);
 
 struct option* get_flags_options();
+
+flag    *create_flag(char flag_value, bool is_first, int idx);
+
+bool	get_flags(int argc, char **argv, flag **flags);
+
+void    free_flags(flag **flags);
+
+void    free_addresses(addresses **addr);
+
+bool index_not_a_flag(int index, flag *flags);
+
+void    free_options(struct option *options);
 
 #endif
