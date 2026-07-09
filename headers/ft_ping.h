@@ -39,9 +39,8 @@ for any corresponding short options. \
 Options marked with (root only) are available only to superuser. \
 \
 Report bugs to syluiset."
-
-# define ICMP_PAYLOAD_LENGTH (64 - sizeof(icmp))
-
+# define ICMP_SIZE 64
+# define ICMP_PAYLOAD_LENGTH (ICMP_SIZE - sizeof(icmp))
 # include <stdio.h>
 # include <string.h>
 # include <stdlib.h>
@@ -75,10 +74,6 @@ typedef struct  s_echo {
     u_int16_t   sequence;
 }               echo;
 
-typedef struct  s_frag {
-    u_int16_t   __unused;
-    u_int16_t   mtu;
-}               frag;
 
 typedef struct  s_icmp
 {
@@ -86,8 +81,6 @@ typedef struct  s_icmp
     u_int8_t    code;
     u_int16_t   checksum;
     echo        echo;
-    u_int32_t   gateway;
-    frag        frag;
 }                   icmp;
 
 typedef struct s_ping_pkt

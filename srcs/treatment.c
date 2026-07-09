@@ -161,7 +161,6 @@ void    display_info_package(ping_pkt *packet, info_package_sended *infos_return
     }
     double time_diff =  (infos_returned->endtime.tv_sec - infos_returned->starttime.tv_sec)
       + (infos_returned->endtime.tv_nsec - infos_returned->starttime.tv_nsec) / 1000000.0;
-
     printf("%li bytes from %s: icmp_seq=%d ttl=%d time=%0.3f ms\n",
         sizeof(*packet), inet_ntoa(dest_addr->sin_addr),
         ntohs(packet->hdr.echo.sequence), infos_returned->ttl, time_diff
