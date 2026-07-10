@@ -9,7 +9,7 @@ int	bypass_hyphen(char *str) {
 }
 
 int	is_single_hyphen_known_flag(char *str) {
-	char	known_flags[] = {'v', '?', 'v'};
+	char	known_flags[] = {'V', '?', 'v'};
 	int		i = 0;
 
 	while (i < 3) {
@@ -66,7 +66,7 @@ void	fill_options(int flag_type, command_options **cmd_options) {
 
 int	update_indexes(int **flag_indexes, int current_length, int new_index) {
 	int	new_length = current_length + 1;
-	int	*old_indexes = malloc(sizeof(int) * current_length);
+	int	*old_indexes = malloc(sizeof(int) * current_length + 1);
 	int i = 0;
 
 	while (i < current_length) {
@@ -75,13 +75,17 @@ int	update_indexes(int **flag_indexes, int current_length, int new_index) {
 	}
 
 	free(*flag_indexes);
-	flag_indexes = malloc(sizeof(int) * new_length);
+	*flag_indexes = malloc(sizeof(int) * new_length + 1);
+	if (!flag_indexes) {
+		dprintf(2, "malloc error");
+		return -1;
+	}
 	i = 0;
 	while (i < current_length) {
 		*flag_indexes[i] = old_indexes[i];
 		i++;
 	}
-	*flag_indexes[++i] = new_index;
+	*flag_indexes[i] = new_index;
 	return new_length;
 }
 

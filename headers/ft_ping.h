@@ -8,36 +8,30 @@
 # define ERROR_NO_ARGS_TEXT "ft_ping: missing host operand\nTry 'ft_ping --help' or 'ft_ping --usage' for more information.\n"
 # define ERROR_WRONG_ARG_TEXT "ft_ping: invalid option\nTry 'ft_ping --help' or 'ft_ping --usage' for more information.\n"
 # define ERROR_ADDRESS_NO_VALUE_TEXT ""
-
-# define VERSION_DISPLAY "ft_ping (based on GNU inetutils) 2.4 \
-Copyright (C) 2022 Free Software Foundation, Inc. \
-License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>. \
-This is free software: you are free to change and redistribute it. \
-There is NO WARRANTY, to the extent permitted by law. \
+# define ERROR_UNKNOWN_HOST "ft_ping: unknown host"
+# define VERSION_DISPLAY "ft_ping (based on GNU inetutils) 2.0\n\
+Copyright (C) 2022 Free Software Foundation, Inc.\n\
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\n\
+This is free software: you are free to change and redistribute it.\n\
+There is NO WARRANTY, to the extent permitted by law.\n\
 Based on code written by Sergey Poznyakoff."
 
-# define HELP_DISPLAY "Usage: ft_ping [OPTION...] HOST ... \
-Send ICMP ECHO_REQUEST packets to network hosts. \
+# define HELP_DISPLAY "Usage: ft_ping [OPTION...] HOST ...\n\
+Send ICMP ECHO_REQUEST packets to network hosts.\n\
 \
-Options controlling ICMP request types: \
-      --address              send ICMP_ADDRESS packets (root only) \
-      --echo                 send ICMP_ECHO packets (default) \
-      --mask                 same as --address \
-\
- Options valid for all request types: \
-\
-  -v, --verbose              verbose output \
-\
- Options valid for --echo requests: \
-  -?, --help                 give this help list \
-      --usage                give a short usage message \
-  -V, --version              print program version \
-\
-Mandatory or optional arguments to long options are also mandatory or optional \
-for any corresponding short options. \
-\
-Options marked with (root only) are available only to superuser. \
-\
+Options controlling ICMP request types:\n\
+      --address              send ICMP_ADDRESS packets (root only)\n\
+      --echo                 send ICMP_ECHO packets (default)\n\
+      --mask                 same as --address\n\n\
+ Options valid for all request types:\n\n\
+  -v, --verbose              verbose output\n\n\
+ Options valid for --echo requests:\n\
+  -?, --help                 give this help list\n\
+      --usage                give a short usage message\n\
+  -V, --version              print program version\n\n\
+Mandatory or optional arguments to long options are also mandatory or optional\n\
+for any corresponding short options.\n\n\
+Options marked with (root only) are available only to superuser.\n\n\
 Report bugs to syluiset."
 # define ICMP_SIZE 64
 # define ICMP_PAYLOAD_LENGTH (ICMP_SIZE - sizeof(icmp))

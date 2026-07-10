@@ -2,11 +2,11 @@
 
 int treat_info_flags(command_options *cmd_options) {
     if (cmd_options->is_help) {
-        printf("%s", HELP_DISPLAY);
+        printf("%s\n", HELP_DISPLAY);
         return 1;
     }
     if (cmd_options->is_version) {
-        printf("%s", VERSION_DISPLAY);
+        printf("%s\n", VERSION_DISPLAY);
         return 1;
     }
     return 0;
@@ -27,7 +27,7 @@ int get_info_from_hostname(char *address, struct sockaddr_in *sock_addr) {
 
     res_get_info = getaddrinfo(address, NULL, &hints, &result);
     if (res_get_info != 0) {
-        printf("ERROR getaddrinfo as failed: %s\n", gai_strerror(res_get_info));
+        printf("%s\n", ERROR_UNKNOWN_HOST);
         return -1;
     }
     for (rp = result; rp != NULL; rp = rp->ai_next) {
@@ -121,14 +121,14 @@ info_package_sended send_package(int fd, ping_pkt* packet, struct sockaddr_in* a
         from_len = sizeof(*addr);
         data_received_length = recvfrom(fd, buffer, sizeof(buffer), 0, (struct sockaddr*)addr, &from_len);
         clock_gettime(CLOCK_MONOTONIC, &info_to_return.endtime);
-        if (data_received_length < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                printf("ERROR: timeout\n");
-                return info_to_return;
-            }
-            printf("ERROR: recvfrom %s as failed : %s\n", inet_ntoa(addr->sin_addr), strerror(errno));
-            return info_to_return;
-        }
+        // if (data_received_length < 0) {
+        //     if (errno != EAGAIN || errno != EWOULDBLOCK) {
+        //         printf("ERROR: timeout\n");
+        //         return info_to_return;
+        //     }
+        //     printf("ERROR: recvfrom %s as failed : %s\n", inet_ntoa(addr->sin_addr), strerror(errno));
+        //     return info_to_return;
+        // }
         if (data_received_length < min_icmp_response_size) {
             continue;
         }
