@@ -52,15 +52,21 @@ Report bugs to syluiset."
 
 extern volatile sig_atomic_t is_cancelled;
 
+typedef struct s_options { 
+    int is_present;
+    int value;
+}           options;
+
 typedef struct  s_command_options
 {
-    int 	is_version;
-    int 	is_verbose;
-    int 	is_help;
-    int 	in_parsing_error;
-	int		*flag_indexes;
-	int		indexes_length;
-    char	**address;
+    options 	is_version;
+    options 	is_verbose;
+    options 	is_help;
+    options     is_counting;
+    int 	    in_parsing_error;
+	int		    *flag_indexes;
+	int		    indexes_length;
+    char	    **address;
 }				command_options;
 
 typedef struct  s_echo {

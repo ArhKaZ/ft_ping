@@ -9,10 +9,10 @@ int	bypass_hyphen(char *str) {
 }
 
 int	is_single_hyphen_known_flag(char *str) {
-	char	known_flags[] = {'V', '?', 'v'};
+	char	known_flags[] = {'V', '?', 'v', 'c'};
 	int		i = 0;
 
-	while (i < 3) {
+	while (i <= 3) {
 		if (*str == known_flags[i])
 			return i;
 		i++;
@@ -21,10 +21,10 @@ int	is_single_hyphen_known_flag(char *str) {
 }
 
 int	is_double_hyphen_known_flag(char *str) {
-	char	*known_flags[] = {"version", "help", "verbose", "address", "mask"};
+	char	*known_flags[] = {"version", "help", "verbose", "count", "address", "mask"};
 	int		i = 0;
 
-	while (i < 5) {
+	while (i <= 5) {
 		if (strcmp(str, known_flags[i]) == 0)
 			return i;
 		i++;
@@ -59,6 +59,8 @@ void	fill_options(int flag_type, command_options **cmd_options) {
 		case 2:
 			(*cmd_options)->is_verbose = 1;
 			break;
+		case 3:
+			(*cmd_options)->is_counting = 1;
 		default:
 			break;
 	}
@@ -66,26 +68,28 @@ void	fill_options(int flag_type, command_options **cmd_options) {
 
 int	update_indexes(int **flag_indexes, int current_length, int new_index) {
 	int	new_length = current_length + 1;
-	int	*old_indexes = malloc(sizeof(int) * current_length + 1);
+	int	*old_indexes = malloc(sizeof(int) * (current_length + 1));
 	int i = 0;
 
 	while (i < current_length) {
-		old_indexes[i] = *flag_indexes[i];
+		old_indexes[i] = (*flag_indexes)[i];
 		i++;
 	}
 
 	free(*flag_indexes);
-	*flag_indexes = malloc(sizeof(int) * new_length + 1);
-	if (!flag_indexes) {
+	*flag_indexes = malloc(sizeof(int) * (new_length + 1));
+	if (!(*flag_indexes)) {
+		free(old_indexes);
 		dprintf(2, "malloc error");
 		return -1;
 	}
 	i = 0;
 	while (i < current_length) {
-		*flag_indexes[i] = old_indexes[i];
+		(*flag_indexes)[i] = old_indexes[i];
 		i++;
 	}
-	*flag_indexes[i] = new_index;
+	(*flag_indexes)[i] = new_index;
+	free(old_indexes);
 	return new_length;
 }
 
@@ -99,7 +103,7 @@ command_options	*flags_specified(char **args) {
 	cmd_options = initialize_command_options();
 
 	while (args[i] != NULL) {
-		if (strchr(args[i], '-')) {
+		if (args[i][0] == '-') {
 			flag_type = verify_and_get_flag(args[i]);
 			fill_options(flag_type, &cmd_options);
 			flag_indexes_length = update_indexes(&flag_find_indexes, flag_indexes_length, i);
@@ -118,7 +122,7 @@ void	get_address(char **argv, command_options **command_options) {
 	while (argv[i] != NULL) {
 		char	**new_tab_address = new_tab_plus_one((*command_options)->address);
 		int		current_length = length_char_tab(new_tab_address);
-		new_tab_address[current_length - 1] = strdup(argv[i]);
+		new_tab_address[current_length] = strdup(argv[i]);
 		free((*command_options)->address);
 		(*command_options)->address = new_tab_address;
 		i++;

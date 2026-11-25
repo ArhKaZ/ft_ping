@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Petit lanceur pour garder la commande ./ft_ping_tester
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/ft_ping_tester.sh" "$@"
